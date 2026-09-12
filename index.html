@@ -106,11 +106,32 @@
 
                 items.forEach(function (item) {
                     const listItem = document.createElement("li");
-                    const formattedDate = new Date(item.pubDate).toLocaleDateString();
-                    listItem.innerHTML = 
-                        '<span class="tag source-tag">' + item.sourceName + '</span> ' + 
-                        '<span class="tag date-tag">' + formattedDate + '</span> ' + 
-                        '<a href="' + item.link + '" target="_blank">' + item.title + '</a>';
+                    
+                    const sourceTag = document.createElement("span");
+                    sourceTag.className = "tag source-tag";
+                    sourceTag.textContent = item.sourceName;
+                    
+                    const dateTag = document.createElement("span");
+                    dateTag.className = "tag date-tag";
+                    dateTag.textContent = new Date(item.pubDate).toLocaleDateString();
+                    
+                    const link = document.createElement("a");
+                    link.textContent = item.title;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    
+                    if (item.link && (item.link.startsWith("http://") || item.link.startsWith("https://"))) {
+                        link.href = item.link;
+                    } else {
+                        link.href = "#";
+                    }
+                    
+                    listItem.appendChild(sourceTag);
+                    listItem.appendChild(document.createTextNode(" "));
+                    listItem.appendChild(dateTag);
+                    listItem.appendChild(document.createTextNode(" "));
+                    listItem.appendChild(link);
+                    
                     itemList.appendChild(listItem);
                 });
             }
