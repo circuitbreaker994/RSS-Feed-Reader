@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>RSS Archive</title>
+        <link rel="stylesheet" href="styles.css" />
+        <link
+            rel="icon"
+            href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>" />
+    </head>
+    <body>
+        <h1>Archived Articles</h1>
+        <p><a href="index.html">Back to the feed</a></p>
+
+        <ul id="archiveList"></ul>
+
+        <script>
+            const GIST_ID = "56b9e3cc7ff26371316fa4c95bbc6c4f";
+
+            async function loadArchive() {
+                const response = await fetch("https://api.github.com/gists/" + GIST_ID);
+                const gist = await response.json();
+                const fileContent = gist.files["archive.json"].content;
+                return JSON.parse(fileContent);
+            }
+
+            function renderArchive(items) {
+                const archiveList = document.getElementById("archiveList");
+                archiveList.innerHTML = "";
+
+                items.forEach(function (item) {
+                    const listItem = document.createElement("li");
+
+                    const sourceTag = document.createElement("span");
+                    sourceTag.className = "tag source-tag";
+                    sourceTag.textContent = item.sourceName;
+
+                    const dateTag = document.createElement("span");
+                    dateTag.className = "tag date-tag";
+                    dateTag.textContent = new Date(item.pubDate).toLocaleDateString();
+
+                    const link = document.createElement("a");
+                    link.textContent = item.title;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+
+                    if (item.link && (item.link.startsWith("http://") || item.link.startsWith("https://"))) {
+                        link.href = item.link;
+                    } else {
+                        link.href = "#";
+                    }
+
+                    const removeBtn = document.createElement("button");
+                    removeBtn.textContent = "Remove";
+                    removeBtn.addEventListener("click", function () {
+                        removeFromArchive(item);
+                    });
+
+                    listItem.appendChild(sourceTag);
+                    listItem.appendChild(document.createTextNode(" "));
+                    listItem.appendChild(dateTag);
+                    listItem.appendChild(document.createTextNode(" "));
+                    listItem.appendChild(link);
+                    listItem.appendChild(document.createTextNode(" "));
+                    listItem.appendChild(removeBtn);
+
+                    archiveList.appendChild(listItem);
+                });
+            }
+
+            async function saveArchive() {
+                const response = await fetch("https://api.github.com/gists/" + GIST_ID, {
+                    method: "PATCH",
+                    headers: {
+                        Authorization: "token " + getToken(),
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        files: {
+                            "archive.json": {
+                                content: JSON.stringify(archivedItems)
+                            }
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    alert("Could not save — check that your GitHub token is set correctly.");
+                }
+
+                return response.ok;
+            }
+
+            function getToken() {
+                return localStorage.getItem("githubToken");
+            }
+
+            async function removeFromArchive(itemToRemove) {
+                const previousArchivedItems = archivedItems;
+
+                archivedItems = archivedItems.filter(function (item) {
+                    return item.link !== itemToRemove.link;
+                });
+
+                const saved = await saveArchive();
+
+                if (saved) {
+                    renderArchive(archivedItems);
+                } else {
+                    archivedItems = previousArchivedItems;
+                }
+            }
+
+            let archivedItems = [];
+
+            async function init() {
+                archivedItems = await loadArchive();
+                renderArchive(archivedItems);
+            }
+
+            init();
+        </script>
+    </body>
+</html>
