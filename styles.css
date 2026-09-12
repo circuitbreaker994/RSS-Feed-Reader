@@ -1,0 +1,15 @@
+.tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    margin-right: 4px;
+}
+
+.source-tag {
+    background-color: #d0e6ff;
+}
+
+.date-tag {
+    background-color: #e0e0e0;
+}
